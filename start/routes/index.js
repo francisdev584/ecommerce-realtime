@@ -20,5 +20,11 @@ Route.get('/', () => {
   return { greeting: 'Hello world in JSON' }
 })
 
+// import auth routes
 require('./auth')
+
+//import admin routes
 require('./admin')
+
+//import client routes
+require('./client')
