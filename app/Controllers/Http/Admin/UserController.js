@@ -82,7 +82,16 @@ class UserController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async update ({ params, request, response }) {
+  async update ({ params: {id}, request, response }) {
+    const user = await User.findOrFail(id)
+
+    const userData = request.only(['name','surname','email','password','image_id'])
+
+    user.merge(userData)
+
+    await user.save()
+
+    return response.send(user)
   }
 
   /**
