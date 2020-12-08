@@ -54,7 +54,7 @@ class AuthController {
     let refresh_token = request.input('refresh_token')
 
     if(!refresh_token) {
-      refresh_token = request.header('refresh_token')
+      [, refresh_token] = request.header('Authorization').split(" ")
     }
 
     await auth.authenticator('jwt').revokeTokens([refresh_token, true])
