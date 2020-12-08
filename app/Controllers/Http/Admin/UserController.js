@@ -7,6 +7,9 @@
 /**
  * Resourceful controller for interacting with users
  */
+
+ const User = use('App/Models/User')
+
 class UserController {
   /**
    * Show a list of all users.
@@ -15,9 +18,21 @@ class UserController {
    * @param {object} ctx
    * @param {Request} ctx.request
    * @param {Response} ctx.response
-   * @param {View} ctx.view
+   * @param {object} ctx.pagination
    */
-  async index ({ request, response, view }) {
+  async index ({ request, response, pagination }) {
+    const name = request.input('name')
+    const query = User.query()
+
+    if (name) {
+      query.where('name', 'LIKE', `%${name}%`)
+      query.orWhere('surname', 'LIKE', `%${name}%`)
+      query.orWhere('email', 'LIKE', `%${name}%`)
+    }
+
+    const users = await query.paginate(pagination.page, pagination.limit)
+
+    return response.send(users)
   }
 
   /**
@@ -29,6 +44,19 @@ class UserController {
    * @param {Response} ctx.response
    */
   async store ({ request, response }) {
+
+    try {
+      const userData = request.only(['name', 'username', 'email', 'password', 'image_id'])
+
+      const user = await User.create(userData)
+
+      return response.status(201).send(user)
+    } catch (error) {
+      return response
+      .status(400)
+      .send({ message: 'Não foi possível criar este usuário no momento!'})
+    }
+
   }
 
   /**
