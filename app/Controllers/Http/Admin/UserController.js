@@ -102,7 +102,19 @@ class UserController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async destroy ({ params, request, response }) {
+  async destroy ({ params:{id}, request, response }) {
+    const user = await User.findOrFail(id)
+
+    try {
+      await user.delete()
+
+      return response.status(204).send()
+    } catch (error) {
+      return response.status(500).send({
+        message: 'Não foi possível apagar esse usuário!'
+      })
+    }
+
   }
 }
 
