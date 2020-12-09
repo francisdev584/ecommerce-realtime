@@ -97,11 +97,10 @@ class CouponController {
       return response.status(201).send(coupon)
     } catch (error) {
       await transaction.rollback()
-      return response.status(400).send({message: 'Não foi possível cria o cupom no momento!'})
+      return response.status(400).send({
+        message: 'Não foi possível cria o cupom no momento!'
+      })
     }
-
-
-
   }
 
   /**
@@ -127,7 +126,62 @@ class CouponController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async update ({ params, request, response }) {
+  async update ({ params: {id}, request, response }) {
+    const transaction = Database.beginTransaction()
+    const coupon = await Coupon.findOrFail(id)
+    let can_use_for = {
+      client: false,
+      product: false
+    }
+
+    try {
+      const couponData = request.only([
+        'code',
+        'discount',
+        'valid_from',
+        'valid_until',
+        'quantity',
+        'type',
+        'recursive'
+      ])
+
+      coupon.merge(couponData)
+
+
+      const { users, products } = request.only(['users', 'products'])
+
+      const couponService = new CouponService(coupon, transaction)
+
+      if (users && users.length > 0) {
+        await couponService.syncUsers(users)
+        can_use_for.client = true
+      }
+
+      if (products && products.length > 0) {
+        await couponService.syncProducts(products)
+        can_use_for.product = true
+      }
+
+      if (can_use_for.product && can_use_for.client) {
+        coupon.can_use_for = 'product_client'
+      }else if(can_use_for.product && !can_use_for.client) {
+        coupon.can_use_for = 'product'
+      }else if(!can_use_for.product && can_use_for.client) {
+        coupon.can_use_for = 'client'
+      }else {
+        coupon.can_use_for = 'all'
+      }
+
+      await coupon.save(transaction)
+      transaction.commit()
+
+      return response.send(coupon)
+    } catch (error) {
+      await transaction.rollback()
+      return response.status(400).send({
+        message: 'Não foi possível atualizar este cupom no momento!'
+      })
+    }
   }
 
   /**
