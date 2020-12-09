@@ -7,6 +7,7 @@
 /**
  * Resourceful controller for interacting with coupons
  */
+const Coupon = use('App/Models/Coupon')
 class CouponController {
   /**
    * Show a list of all coupons.
@@ -15,9 +16,19 @@ class CouponController {
    * @param {object} ctx
    * @param {Request} ctx.request
    * @param {Response} ctx.response
-   * @param {View} ctx.view
+   * @param {object} ctx.pagination
    */
-  async index ({ request, response, view }) {
+  async index ({ request, response, pagination }) {
+    const code = request.input('code')
+    const query = Coupon.query()
+
+    if (code) {
+      query.where('code', 'LIKE', `%${code}%`)
+    }
+
+    const coupons = await query.paginate(pagination.page, pagination.limit)
+
+    return response.send(coupons)
   }
 
   /**
