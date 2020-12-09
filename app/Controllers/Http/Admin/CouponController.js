@@ -8,6 +8,7 @@
  * Resourceful controller for interacting with coupons
  */
 const Coupon = use('App/Models/Coupon')
+const Database = use('Database')
 class CouponController {
   /**
    * Show a list of all coupons.
@@ -76,7 +77,24 @@ class CouponController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async destroy ({ params, request, response }) {
+  async destroy ({ params: {id}, request, response }) {
+    const transaction = await Database.beginTransaction()
+    const coupon = await Coupon.findOrFail(id)
+
+    try {
+      await coupon.products().detach([], transaction)
+      await coupon.orders().detach([], transaction)
+      await coupon.users().detach([],transaction)
+      await coupon.delete(transaction)
+      await transaction.commit()
+
+      return response.status(204).send()
+    } catch (error) {
+      await transaction.rollback()
+      return response.status(400).send({
+        message: 'Não foi possível apagar esse coupon no momento'
+      })
+    }
   }
 }
 
