@@ -9,6 +9,7 @@
  */
 const Coupon = use('App/Models/Coupon')
 const Database = use('Database')
+const CouponService = use('App/Services/Coupon/CouponService')
 class CouponController {
   /**
    * Show a list of all coupons.
@@ -41,6 +42,66 @@ class CouponController {
    * @param {Response} ctx.response
    */
   async store ({ request, response }) {
+    /**
+     * 1 - products - pode ser utilizado apenas em produtos específicos
+     * 2 - clients - pode ser utilizado apenas por clientes específicos
+     * 3 - clients and products - pode ser utilizado somente em produtos e clientes específicos
+     * 4 - pode ser utilizado por qualquer cliente em qualquer pedido
+     */
+    const transaction = Database.beginTransaction()
+
+    let can_use_for = {
+      client: false,
+      product: false
+    }
+
+    try {
+      const couponData = request.only([
+        'code',
+        'discount',
+        'valid_from',
+        'valid_until',
+        'quantity',
+        'type',
+        'recursive'
+      ])
+
+      const { users, products } = request.only(['users', 'products'])
+
+      const coupon = await Coupon.create(couponData, transaction)
+      // starts service Layer
+      const couponService = new CouponService(coupon, transaction)
+      // insert relationships on DB
+      if (users && users.length > 0) {
+        await couponService.syncUsers(users)
+        can_use_for.client = true
+      }
+      if (products && products.length > 0) {
+        await couponService.syncProducts(products)
+        can_use_for.product = true
+      }
+
+      if (can_use_for.product && can_use_for.client) {
+        coupon.can_use_for = 'product_client'
+      }else if(can_use_for.product && !can_use_for.client) {
+        coupon.can_use_for = 'product'
+      }else if(!can_use_for.product && can_use_for.client) {
+        coupon.can_use_for = 'client'
+      }else {
+        coupon.can_use_for = 'all'
+      }
+
+      await coupon.save()
+      await transaction.commit()
+
+      return response.status(201).send(coupon)
+    } catch (error) {
+      await transaction.rollback()
+      return response.status(400).send({message: 'Não foi possível cria o cupom no momento!'})
+    }
+
+
+
   }
 
   /**
