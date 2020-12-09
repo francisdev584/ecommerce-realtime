@@ -9,6 +9,8 @@
  */
 const Image = use('App/Models/Image')
 const { manage_single_upload, manage_multiple_uploads } = use('App/Helpers')
+const fs = use('fs')
+
 class ImageController {
   /**
    * Show a list of all images.
@@ -138,7 +140,22 @@ class ImageController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async destroy ({ params, request, response }) {
+  async destroy ({ params:{id}, request, response }) {
+    const image = await Image.findOrFail(id)
+    try {
+      let filePath = Helpers.publicPath(`uploads/${image.path}`)
+      await fs.unlink(filePath, err => {
+        if (!err) {
+          await image.delete()
+        }
+      })
+
+      return response.status(204).send()
+    } catch (error) {
+      return response.status(400).send({
+        message: 'Não foi possível apagar a imagem no momento!'
+      })
+    }
   }
 }
 
