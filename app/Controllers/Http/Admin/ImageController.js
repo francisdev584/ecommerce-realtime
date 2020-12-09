@@ -7,6 +7,7 @@
 /**
  * Resourceful controller for interacting with images
  */
+const Image = use('App/Models/Image')
 class ImageController {
   /**
    * Show a list of all images.
@@ -17,7 +18,12 @@ class ImageController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async index ({ request, response, view }) {
+  async index ({ response, pagination }) {
+    const images = await Image.query()
+    .orderBy('id','DESC')
+    .paginate(pagination.page, pagination.limit)
+
+    return response.send(images)
   }
 
   /**
