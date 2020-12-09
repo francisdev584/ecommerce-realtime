@@ -103,7 +103,7 @@ class ImageController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async show ({ params:{id}, request, response }) {
+  async show ({ params:{id}, response }) {
     const image = await Image.findOrFail(id)
 
     return response.send(image)
@@ -140,7 +140,7 @@ class ImageController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async destroy ({ params:{id}, request, response }) {
+  async destroy ({ params:{id}, response }) {
     const image = await Image.findOrFail(id)
     try {
       let filePath = Helpers.publicPath(`uploads/${image.path}`)
