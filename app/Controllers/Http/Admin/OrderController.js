@@ -94,7 +94,28 @@ class OrderController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async update ({ params, request, response }) {
+  async update ({ params: {id}, request, response }) {
+    const order = await Order.findOrFail(id)
+    const transaction = await Database.beginTransaction()
+
+    try {
+      const { user_id, items, status } = request.all()
+      order.merge({user_id, status})
+
+      const orderService = new OrderService(order, transaction)
+
+      await orderService.updateItems(items)
+      await order.save(transaction)
+      await transaction.commit()
+
+      return response.send(order)
+    } catch (error) {
+      await transaction.rollback()
+
+      return response.status(400).send({
+        message: 'Não foi possível atualizar este pedido no momento!'
+      })
+    }
   }
 
   /**
