@@ -9,6 +9,7 @@
  */
 const Order = use('App/Models/Order')
 const Database = use('Database')
+const OrderService = use('App/Services/Order/OrderService')
 
 class OrderController {
   /**
@@ -47,6 +48,28 @@ class OrderController {
    * @param {Response} ctx.response
    */
   async store ({ request, response }) {
+    const transaction = await Database.beginTransaction()
+
+    try {
+      const { user_id, items, status } = request.all()
+      const order = await Order.create({ user_id, status }, transaction)
+
+      const orderService = new OrderService(order, transaction)
+
+      if (items && items.length > 0 ) {
+        await orderService.syncItems(items)
+      }
+
+      await transaction.commit()
+
+      return response.status(201).send()
+    } catch (error) {
+      await transaction.rollback()
+
+      return response.status(400).send({
+        message: 'Não foi possível criar o pedido no momento!'
+      })
+    }
   }
 
   /**
