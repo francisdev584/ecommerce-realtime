@@ -2,6 +2,7 @@
 
 const Coupon = use('App/Models/Coupon')
 const Order = use('App/Models/Order')
+const Database = use('Database')
 
 const DiscountHook = exports = module.exports = {}
 
@@ -50,4 +51,25 @@ DiscountHook.calculateValues = async model => {
   }
 
   return model
+}
+
+// decrementa quantidade de cupons disponíveis para uso
+DiscountHook.decrementCoupons = async model => {
+  const query = Database.from('coupons')
+
+  if (model.$transaction) {
+    query.transacting(model.$transaction)
+  }
+  await query.where('id', model.coupon_id).decrement('quantity', 1)
+}
+
+// Incrementa a quantidade de cupons disponíveis(quando um desconto é retirado)
+DiscountHook.incrementCoupons = async model => {
+  const query = Database.from('coupons')
+
+  if (model.$transaction) {
+    query.transacting(model.$transaction)
+  }
+
+  await query.where('id', model.coupon_id).increment('quantity', 1)
 }
