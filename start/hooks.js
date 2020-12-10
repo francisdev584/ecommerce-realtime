@@ -1,5 +1,5 @@
 'use strict'
-const { hooks } = require('@adonisjs/fold')
+const { hooks } = require('@adonisjs/ignitor')
 
 hooks.after.providersBooted(() => {
   const Validator = use('Validator')
