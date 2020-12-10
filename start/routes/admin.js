@@ -5,7 +5,19 @@ const Route = use('Route')
 
 Route.group(() => {
   // Categories resource routes
-  Route.resource('categories','CategoryController').apiOnly()
+  Route.resource('categories','CategoryController')
+  .apiOnly()
+  .validator(new Map([
+    //tabela
+     [
+       //linha
+       ['categories.store'], ['Admin/StoreCategory']
+     ],
+     [
+       // linha
+       ['categories.update'], ['Admin/StoreCategory']
+     ]
+  ]))
 
   // Products resource routes
   Route.resource('products','ProductController').apiOnly()
