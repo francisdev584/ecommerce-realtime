@@ -7,6 +7,8 @@
 /**
  * Resourceful controller for interacting with orders
  */
+const Order = use('App/Models/Order')
+
 class OrderController {
   /**
    * Show a list of all orders.
@@ -17,7 +19,22 @@ class OrderController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async index ({ request, response, view }) {
+  async index ({ request, response, pagination }) {
+    const { status, id } = request.only(['status', 'id'])
+    const query = Order.query()
+
+    if(status && id) {
+      query.where('status', status)
+      query.orWhere('id','LIKE', `%${id}%`)
+    } else if(status) {
+      query.where('status', status)
+    } else if(id) {
+      query.where('id','LIKE', `%${id}%`)
+    }
+
+    const orders = query.paginate(pagination.page, pagination.limit)
+
+    return response.send(orders)
   }
 
   /**
@@ -40,7 +57,8 @@ class OrderController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async show ({ params, request, response, view }) {
+  async show ({ params: {id}, request, response, view }) {
+
   }
 
   /**
