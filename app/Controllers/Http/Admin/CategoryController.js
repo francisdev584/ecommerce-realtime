@@ -8,6 +8,8 @@
  * Resourceful controller for interacting with categories
  */
 const Category = use('App/Models/Category')
+const categoryTransformer = use('App/Transformers/Admin/CategoryTransformer')
+
 class CategoryController {
   /**
    * Show a list of all categories.
@@ -19,7 +21,7 @@ class CategoryController {
    * @param {View} ctx.view
    * @param {object} ctx.pagination
    */
-  async index ({ request, response, pagination }) {
+  async index ({ request, response, transform, pagination }) {
     const title = request.input('title')
     const query = Category.query()
 
@@ -27,7 +29,9 @@ class CategoryController {
       query.where('title', 'LIKE',`%${title}%`)
     }
 
-    const categories = await query.paginate(pagination.page, pagination.limit)
+    const categoriesData = await query.paginate(pagination.page, pagination.limit)
+
+    const categories = await transform.paginate(categoriesData, categoryTransformer)
 
     return response.send(categories)
   }
@@ -40,11 +44,13 @@ class CategoryController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async store ({ request, response }) {
+  async store ({ request, response,transform }) {
     try {
       const { title, description, image_id } = request.all()
 
-      const category = await Category.create({title, description, image_id})
+      const categoryData = await Category.create({title, description, image_id})
+
+      const category = await transform.item(categoryData, categoryTransformer)
 
       return response.status(201).send(category)
     } catch (error) {
