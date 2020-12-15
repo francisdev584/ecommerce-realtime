@@ -11,7 +11,7 @@ class OrderService {
       return false
     }
     await this.model.items().delete(this.transaction)
-    await this.model.items().createMany( [ items, this.transaction ] )
+    await this.model.items().createMany( items, this.transaction )
   }
 
   async updateItems(items) {
