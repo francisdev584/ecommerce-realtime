@@ -9,7 +9,7 @@ const ImageTransformer = use('App/Transformers/Admin/ImageTransformer')
  * @constructor
  */
 class CategoryTransformer extends BumblebeeTransformer {
-  defaultInclude() {
+  static get defaultInclude() {
     return ['image']
   }
   /**

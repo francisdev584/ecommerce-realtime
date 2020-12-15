@@ -15,7 +15,7 @@ class OrderTransformer extends BumblebeeTransformer {
   /**
    * This method is used to transform the data.
    */
-  availableInclude() {
+  static get availableInclude() {
     return ['user', 'coupons', 'items', 'discounts']
   }
 
@@ -38,15 +38,15 @@ class OrderTransformer extends BumblebeeTransformer {
   }
 
   includeItems(order) {
-    return this.item(order.getRelated('items'), OrderItemTransformer)
+    return this.collection(order.getRelated('items'), OrderItemTransformer)
   }
 
   includeCoupons(order) {
-    return this.item(order.getRelated('coupons'), CouponTransformer)
+    return this.collection(order.getRelated('coupons'), CouponTransformer)
   }
 
   includeDiscounts(order) {
-    return this.item(order.getRelated('discount'), DiscountTransformer)
+    return this.collection(order.getRelated('discounts'), DiscountTransformer)
   }
 }
 
