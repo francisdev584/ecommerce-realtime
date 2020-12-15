@@ -86,7 +86,7 @@ class OrderController {
    */
   async show ({ params: {id}, request, response, transform }) {
     const order = await Order.findOrFail(id)
-    const transformedOrder = await transform.item(order, OrderTransformer)
+    const transformedOrder = await transform.include('items,user,discounts').item(order, OrderTransformer)
     return response.send(transformedOrder)
   }
 
@@ -111,7 +111,7 @@ class OrderController {
       await orderService.updateItems(items)
       await order.save(transaction)
       await transaction.commit()
-      const transformedOrder = await transform.item(order, OrderTransformer)
+      const transformedOrder = await transform.include('items,user,discounts,coupons').item(order, OrderTransformer)
       return response.send(transformedOrder)
     } catch (error) {
       await transaction.rollback()
