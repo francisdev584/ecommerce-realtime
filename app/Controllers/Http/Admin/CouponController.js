@@ -10,6 +10,7 @@
 const Coupon = use('App/Models/Coupon')
 const Database = use('Database')
 const CouponService = use('App/Services/Coupon/CouponService')
+const CouponTransformer = use('App/Transformers/Admin/CouponTransformer')
 class CouponController {
   /**
    * Show a list of all coupons.
@@ -20,7 +21,7 @@ class CouponController {
    * @param {Response} ctx.response
    * @param {object} ctx.pagination
    */
-  async index ({ request, response, pagination }) {
+  async index ({ request, response, pagination, transform }) {
     const code = request.input('code')
     const query = Coupon.query()
 
@@ -29,8 +30,8 @@ class CouponController {
     }
 
     const coupons = await query.paginate(pagination.page, pagination.limit)
-
-    return response.send(coupons)
+    const transformedCoupons = await transform.paginate(coupons, CouponTransformer)
+    return response.send(transformedCoupons)
   }
 
   /**
@@ -41,7 +42,7 @@ class CouponController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async store ({ request, response }) {
+  async store ({ request, response, transform }) {
     /**
      * 1 - products - pode ser utilizado apenas em produtos específicos
      * 2 - clients - pode ser utilizado apenas por clientes específicos
@@ -94,7 +95,9 @@ class CouponController {
       await coupon.save()
       await transaction.commit()
 
-      return response.status(201).send(coupon)
+      const transformedCoupon = await transform.item(coupon, CouponTransformer)
+
+      return response.status(201).send(transformedCoupon)
     } catch (error) {
       await transaction.rollback()
       return response.status(400).send({
@@ -112,10 +115,12 @@ class CouponController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async show ({ params: {id}, request, response }) {
+  async show ({ params: {id}, request, response, transform}) {
     const coupon = await Coupon.findOrFail(id)
 
-    return response.send(coupon)
+    const transformedCoupon = await transform.item(coupon, CouponTransformer)
+
+    return response.send(transformedCoupon)
   }
 
   /**
@@ -126,7 +131,7 @@ class CouponController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async update ({ params: {id}, request, response }) {
+  async update ({ params: {id}, request, response, transform }) {
     const transaction = Database.beginTransaction()
     const coupon = await Coupon.findOrFail(id)
     let can_use_for = {
@@ -175,7 +180,9 @@ class CouponController {
       await coupon.save(transaction)
       transaction.commit()
 
-      return response.send(coupon)
+      const transformedCoupon = await transform.item(coupon, CouponTransformer)
+
+      return response.send(transformedCoupon)
     } catch (error) {
       await transaction.rollback()
       return response.status(400).send({
