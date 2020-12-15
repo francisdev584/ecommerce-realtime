@@ -9,7 +9,7 @@
  */
 
  const User = use('App/Models/User')
-
+const UserTransformer = use('App/Transformers/Admin/UserTransformer')
 class UserController {
   /**
    * Show a list of all users.
@@ -20,7 +20,7 @@ class UserController {
    * @param {Response} ctx.response
    * @param {object} ctx.pagination
    */
-  async index ({ request, response, pagination }) {
+  async index ({ request, response, pagination, transform }) {
     const name = request.input('name')
     const query = User.query()
 
@@ -31,8 +31,8 @@ class UserController {
     }
 
     const users = await query.paginate(pagination.page, pagination.limit)
-
-    return response.send(users)
+    const transformedUsers = await transform.paginate(users, UserTransformer)
+    return response.send(transformedUsers)
   }
 
   /**
@@ -43,14 +43,14 @@ class UserController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async store ({ request, response }) {
+  async store ({ request, response, transform }) {
 
     try {
       const userData = request.only(['name', 'surname', 'email', 'password', 'image_id'])
 
       const user = await User.create(userData)
-
-      return response.status(201).send(user)
+      const transformedUser = await transform.item(user, UserTransformer)
+      return response.status(201).send(transformedUser)
     } catch (error) {
       return response
       .status(400)
@@ -68,10 +68,10 @@ class UserController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async show ({ params: {id}, response }) {
+  async show ({ params: {id}, response, transform }) {
     const user = await User.findOrFail(id)
-
-    return response.send(user)
+    const transformedUser = await transform.item(user, UserTransformer)
+    return response.send(transformedUser)
   }
 
   /**
@@ -82,7 +82,7 @@ class UserController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async update ({ params: {id}, request, response }) {
+  async update ({ params: {id}, request, response, transform }) {
     const user = await User.findOrFail(id)
 
     const userData = request.only(['name','surname','email','password','image_id'])
@@ -90,8 +90,8 @@ class UserController {
     user.merge(userData)
 
     await user.save()
-
-    return response.send(user)
+    const transformedUser = await transform.item(user, UserTransformer)
+    return response.send(transformedUser)
   }
 
   /**
