@@ -8,6 +8,7 @@
  * Resourceful controller for interacting with products
  */
 const Product = use('App/Models/Product')
+const ProductTransformer = use('App/Transformers/Admin/ProductTransformer')
 class ProductController {
   /**
    * Show a list of all products.
@@ -18,7 +19,7 @@ class ProductController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async index ({ request, response, pagination}) {
+  async index ({ request, response, pagination, transform }) {
     const name = request.input('name')
     const query = Product.query()
 
@@ -27,8 +28,8 @@ class ProductController {
     }
 
     const products = await query.paginate(pagination.page, pagination.limit)
-
-    return response.send(products)
+    const transformedProducts = await transform.paginate(products, ProductTransformer)
+    return response.send(transformedProducts)
   }
 
   /**
@@ -39,13 +40,13 @@ class ProductController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async store ({ request, response }) {
+  async store ({ request, response, transform}) {
     try {
       const { name, description, price, image_id } = request.all()
 
       const product = await Product.create({ name, description, price, image_id })
-
-      return response.status(201).send(product)
+      const transformedProduct = await transform.item(product, ProductTransformer)
+      return response.status(201).send(transformedProduct)
     } catch (error) {
       return response.status(400).send({
         message: 'Não foi possível criar o produto neste momento!'
@@ -62,10 +63,10 @@ class ProductController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async show ({ params: {id}, request, response }) {
+  async show ({ params: {id}, request, response, transform }) {
     const product = await Product.findOrFail(id)
-
-    return response.send(product)
+    const transformedProduct = await transform.item(product, ProductTransformer)
+    return response.send(transformedProduct)
   }
 
   /**
@@ -76,7 +77,7 @@ class ProductController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async update ({ params: {id}, request, response }) {
+  async update ({ params: {id}, request, response, transform }) {
     const product = await Product.findOrFail(id)
 
     try {
@@ -85,8 +86,8 @@ class ProductController {
       product.merge({name, description, price, image_id})
 
       await product.save()
-
-      return response.send(product)
+      const transformedProduct = await transform.item(product, ProductTransformer)
+      return response.send(transformedProduct)
     } catch (error) {
       return response.status(400).send({
         message: 'Não foi possível atualizar esse produto!'
