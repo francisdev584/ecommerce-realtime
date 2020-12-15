@@ -95,7 +95,7 @@ class CouponController {
       await coupon.save()
       await transaction.commit()
 
-      const transformedCoupon = await transform.item(coupon, CouponTransformer)
+      const transformedCoupon = await transform.include('users,products').item(coupon, CouponTransformer)
 
       return response.status(201).send(transformedCoupon)
     } catch (error) {
@@ -118,7 +118,7 @@ class CouponController {
   async show ({ params: {id}, request, response, transform}) {
     const coupon = await Coupon.findOrFail(id)
 
-    const transformedCoupon = await transform.item(coupon, CouponTransformer)
+    const transformedCoupon = await transform.include('products,users,orders').item(coupon, CouponTransformer)
 
     return response.send(transformedCoupon)
   }
