@@ -11,7 +11,7 @@ class OrderSchema extends Schema {
       table.integer('user_id').unsigned()
       table.enu('status',
         ['pending','cancelled','shipped','paid','finished']
-      )
+      ).defaultTo('pending')
 
 
       table.timestamps()
