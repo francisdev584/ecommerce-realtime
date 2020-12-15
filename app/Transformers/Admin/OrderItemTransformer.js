@@ -15,12 +15,12 @@ class OrderItemTransformer extends BumblebeeTransformer {
   /**
    * This method is used to transform the data.
    */
-  transform (model) {
+  transform (orderItem) {
     return {
      // add your transformation object here
-     id: model.id,
-     subtotal: model.subtotal,
-     quantity: model.quantity
+     id: orderItem.id,
+     subtotal: orderItem.subtotal,
+     quantity: orderItem.quantity
     }
   }
 

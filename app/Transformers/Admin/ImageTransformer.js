@@ -13,14 +13,14 @@ class ImageTransformer extends BumblebeeTransformer {
    * This method is used to transform the data.
    */
   transform (image) {
-    let imageData = image.toJSON()
+    image = image.toJSON()
     return {
      // add your transformation object here
-     id: imageData.id,
-     url: imageData.url,
-     size: imageData.size,
-     original_name: imageData.original_name,
-     extension: imageData.extension
+     id: image.id,
+     url: image.url,
+     size: image.size,
+     original_name: image.original_name,
+     extension: image.extension
     }
   }
 }

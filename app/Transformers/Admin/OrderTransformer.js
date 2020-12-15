@@ -27,9 +27,9 @@ class OrderTransformer extends BumblebeeTransformer {
      status: order.status,
      date: order.created_at,
      total: order.total ? parseFloat(order.total.toFixed(2)) : 0,
-     qty_items: order.__meta__ && order.__meta__.qty_items ? order.__meta__.qty_items : 0,
-     discount: order.__meta__ && order.__meta__.discount ? order.__meta__.discount : 0,
-     subtotal: order.__meta__ && order.__meta__.subtotal ? order.__meta__.subtotal : 0,
+     qty_items: order.__meta__ && order.__meta__.qty_items ? parseInt(order.__meta__.qty_items) : 0,
+     discount: order.__meta__ && order.__meta__.discount ? parseFloat(order.__meta__.discount) : 0,
+     subtotal: order.__meta__ && order.__meta__.subtotal ? parseFloat(order.__meta__.subtotal) : 0,
     }
   }
 

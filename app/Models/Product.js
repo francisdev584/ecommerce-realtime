@@ -5,13 +5,13 @@ const Model = use('Model')
 
 class Product extends Model {
   image() {
-    return this.belongsTo('/App/Models/Image')
+    return this.belongsTo('App/Models/Image')
   }
 
   // relaciomento entre produto e imagens.
   // Galeria de Imagens
   images() {
-    return this.belongsToMany('/App/Models/Image')
+    return this.belongsToMany('App/Models/Image')
   }
 
   categories() {

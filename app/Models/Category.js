@@ -11,7 +11,7 @@ class Category extends Model {
 
   //relacionamento entre categoria e produto
   products() {
-    return this.belongsToMany('/App/Models/Product')
+    return this.belongsToMany('App/Models/Product')
   }
 }
 

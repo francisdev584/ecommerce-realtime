@@ -5,7 +5,7 @@ const Model = use('Model')
 const Env = use('Env')
 
 class Image extends Model {
-  static computed() {
+  static get computed() {
     return ['url']
   }
 

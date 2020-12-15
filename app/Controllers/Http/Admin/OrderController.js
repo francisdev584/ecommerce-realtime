@@ -63,7 +63,8 @@ class OrderController {
       }
 
       await transaction.commit()
-      const transformedOrder = await transform.item(order, OrderTransformer)
+      const ordercreated = await Order.find(order.id)
+      const transformedOrder = await transform.include('user,items').item(ordercreated, OrderTransformer)
       return response.status(201).send(transformedOrder)
     } catch (error) {
       await transaction.rollback()
