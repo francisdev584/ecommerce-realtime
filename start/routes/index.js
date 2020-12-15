@@ -16,6 +16,9 @@
 /** @type {typeof import('@adonisjs/framework/src/Route/Manager')} */
 const Route = use('Route')
 
+// retorna o usuário logado atualmente
+Route.get('v1/me', 'UserController.me').as('me').middleware('auth')
+
 // import auth routes
 require('./auth')
 
