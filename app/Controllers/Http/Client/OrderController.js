@@ -13,7 +13,7 @@ const OrderService = use('App/Services/Order/OrderService')
 const Coupon = use('App/Models/Coupon')
 const Discount = use('App/Models/Discount')
 const OrderTransformer = use('App/Transformers/Admin/OrderTransformer')
-
+const Ws = use('Ws')
 class OrderController {
   /**
    * Show a list of all orders.
@@ -49,22 +49,34 @@ class OrderController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async store ({ request, response, transform }) {
+  async store ({ request, response, transform, auth }) {
     const transaction = await Database.beginTransaction()
 
     try {
-      const { user_id, items, status } = request.all()
-      const order = await Order.create({ user_id, status }, transaction)
+      const items = request.input('items')
+      const client = await auth.getUser()
+
+      const order = await Order.create({ user_id: client.id }, transaction)
 
       const orderService = new OrderService(order, transaction)
 
-      if (items && items.length > 0 ) {
+      if (items.length > 0 ) {
         await orderService.syncItems(items)
       }
 
       await transaction.commit()
-      const ordercreated = await Order.find(order.id)
-      const transformedOrder = await transform.include('user,items').item(ordercreated, OrderTransformer)
+
+      const orderCreated = await Order.find(order.id)
+      const transformedOrder = await transform
+      .include('items')
+      .item(orderCreated, OrderTransformer)
+
+      const topic = Ws.getChannel('notifications').topic('notifications')
+
+      if (topic) {
+        topic.broadcast('new:order', transformedOrder)
+      }
+
       return response.status(201).send(transformedOrder)
     } catch (error) {
       await transaction.rollback()
