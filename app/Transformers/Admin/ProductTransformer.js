@@ -21,7 +21,7 @@ class ProductTransformer extends BumblebeeTransformer {
      id: model.id,
      name: model.name,
      description: model.description,
-     price: model.price
+     price: parseFloat(model.price)
     }
   }
 
