@@ -154,10 +154,15 @@ class OrderController {
    * Não terá metodo destroy pq o cliente não apaga o pedido, ele cancela.
    */
 
-  async applyDiscount({ params: { id }, request, response, transform }) {
+  async applyDiscount({ params: { id }, request, response, transform, auth }) {
     const { code } = request.all()
     const coupon = await Coupon.findByOrFail('code', code.toUpperCase())
-    const order = await Order.findOrFail(id)
+    const client = await auth.getUser()
+    const order = await Order.query()
+    .where('user_id', client.id)
+    .where('id', id)
+    .firstOrFail()
+
     let discount, info = {}
 
     try {
@@ -186,7 +191,7 @@ class OrderController {
     }
   }
 
-  async removeDiscount({request, response}) {
+  async removeDiscount({params: { id }, request, response, auth}) {
     const { discount_id } = request.all()
     const discount = await Discount.findOrFail(discount_id)
     await discount.delete()
