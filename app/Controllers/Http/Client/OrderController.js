@@ -96,7 +96,7 @@ class OrderController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async show ({ params: {id}, response, transform, auth }) {
+  async show ({ params: { id }, response, transform, auth }) {
     const client = await auth.getUser()
     const result = await Order.query()
     .where('user_id', client.id)
@@ -116,20 +116,31 @@ class OrderController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async update ({ params: {id}, request, response, transform }) {
-    const order = await Order.findOrFail(id)
+  async update ({ params: { id }, request, response, transform, auth }) {
+    const client = await auth.getUser()
+    const order = await Order.query()
+    .where('user_id', client.id)
+    .where('id', id)
+    .firstOrFail()
+
     const transaction = await Database.beginTransaction()
 
     try {
-      const { user_id, items, status } = request.all()
-      order.merge({user_id, status})
+      const { items, status } = request.all()
+      order.merge({user_id: client.id, status })
 
       const orderService = new OrderService(order, transaction)
 
       await orderService.updateItems(items)
+
       await order.save(transaction)
+
       await transaction.commit()
-      const transformedOrder = await transform.include('items,user,discounts,coupons').item(order, OrderTransformer)
+
+      const transformedOrder = await transform
+      .include('items,coupons,discounts')
+      .item(order, OrderTransformer)
+
       return response.send(transformedOrder)
     } catch (error) {
       await transaction.rollback()
@@ -139,35 +150,11 @@ class OrderController {
       })
     }
   }
-
   /**
-   * Delete a order with id.
-   * DELETE orders/:id
-   *
-   * @param {object} ctx
-   * @param {Request} ctx.request
-   * @param {Response} ctx.response
+   * Não terá metodo destroy pq o cliente não apaga o pedido, ele cancela.
    */
-  async destroy ({ params: {id}, request, response }) {
-    const order = await Order.findOrFail(id)
-    const transaction = await Database.beginTransaction()
 
-    try {
-      await order.items().delete(transaction)
-      await order.coupons().delete(transaction)
-      await order.delete(transaction)
-      await transaction.commit()
-
-      return response.status(204).send()
-    } catch (error) {
-      await transaction.rollback()
-      return response.status(400).send({
-        message: 'Erro ao apagar esse pedido!'
-      })
-    }
-  }
-
-  async applyDiscount({ params: {id}, request, response, transform }) {
+  async applyDiscount({ params: { id }, request, response, transform }) {
     const { code } = request.all()
     const coupon = await Coupon.findByOrFail('code', code.toUpperCase())
     const order = await Order.findOrFail(id)
